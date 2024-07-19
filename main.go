@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 func home(w http.ResponseWriter, r *http.Request) {
@@ -20,7 +22,18 @@ func content(w http.ResponseWriter, r *http.Request) {
 }
 
 func showSnippet(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Display a specific snippet..."))
+	query := r.URL.Query()
+	fmt.Println(query)
+
+	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+
+	if err != nil || id < 1 {
+		http.NotFound(w, r)
+		return
+	}
+
+	fmt.Fprintf(w, "Display a specific snippet with ID %d\n", id)
+	// w.Write([]byte("Display a specific snippet..."))
 }
 
 func createSnippet(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +52,7 @@ func createSnippet(w http.ResponseWriter, r *http.Request) {
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippet/", showSnippet)
+	mux.HandleFunc("/snippet", showSnippet)
 	mux.HandleFunc("/snippet/create", createSnippet)
 	mux.HandleFunc("/content", content)
 
