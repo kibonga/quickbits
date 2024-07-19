@@ -8,6 +8,16 @@ import (
 	"text/template"
 )
 
+type myType struct{}
+
+func (t *myType) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("This is my custom handler"))
+}
+
+func funcHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("This is my custom handler function"))
+}
+
 func home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)

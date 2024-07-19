@@ -7,6 +7,9 @@ import (
 
 func main() {
 	mux := http.NewServeMux()
+	mux.Handle("/handler", &myType{})
+	mux.HandleFunc("/handler/function", funcHandler)
+	mux.Handle("/handler/func", http.HandlerFunc(funcHandler))
 	mux.HandleFunc("/", home)
 	mux.HandleFunc("/snippet", showSnippet)
 	mux.HandleFunc("/snippet/create", createSnippet)
