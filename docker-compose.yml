@@ -1,0 +1,16 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: quickbits_mysql
+    environment:
+      MYSQL_PASSWORD: assword123
+      MYSQL_DATABASE: quickbits_db
+      MYSQL_USER: quick
+      MYSQL_ROOT_PASSWORD: rootassword123
+    ports:
+      - "3030:3030"
+    volumes: 
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
