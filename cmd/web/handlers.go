@@ -25,9 +25,9 @@ func (a *app) home(w http.ResponseWriter, r *http.Request) {
 
 	// w.Write([]byte("Hello from quickbits!\n"))
 	files := []string{
-		"../../ui/html/home.page.tmpl",
-		"../../ui/html/footer.partial.tmpl",
-		"../../ui/html/base.layout.tmpl",
+		"./ui/html/home.page.tmpl",
+		"./ui/html/footer.partial.tmpl",
+		"./ui/html/base.layout.tmpl",
 	}
 
 	ts, err := template.ParseFiles(files...)
