@@ -3,14 +3,33 @@ services:
     image: mysql:8.0
     container_name: quickbits_mysql
     environment:
-      MYSQL_PASSWORD: assword123
+      MYSQL_PASSWORD: pass
       MYSQL_DATABASE: quickbits_db
-      MYSQL_USER: quick
+      MYSQL_USER: web
       MYSQL_ROOT_PASSWORD: rootassword123
     ports:
-      - "3030:3030"
+      - "3030:3306"
+    networks:
+      - quickbit_net
     volumes: 
       - mysql_data:/var/lib/mysql
 
+  app:
+    image: quickbits_img
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: quickbits_app
+    ports:
+      - "4000:4000" 
+    networks:
+      - quickbit_net
+    depends_on:
+      - mysql
+    command: /app/main -addr=:4000
+
 volumes:
-  mysql_data:
+  mysql_data: 
+
+networks:
+  quickbit_net:
