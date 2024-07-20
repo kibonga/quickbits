@@ -7,33 +7,57 @@ import (
 	"os"
 )
 
-func main() {
+type app struct {
+	errorLog *log.Logger
+	infoLog  *log.Logger
+	mux      *http.ServeMux
+}
+
+func initApp() *app {
+	return &app{
+		infoLog:  log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
+		errorLog: log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime),
+		mux:      http.NewServeMux(),
+	}
+}
+
+func (a *app) createServer() *http.Server {
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	flag.Parse()
 
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	return &http.Server{
+		Addr:     *addr,
+		ErrorLog: a.errorLog,
+		Handler:  a.mux,
+	}
+}
 
-	mux := http.NewServeMux()
-	mux.Handle("/handler", &myType{})
-	mux.HandleFunc("/handler/function", funcHandler)
-	mux.Handle("/handler/func", http.HandlerFunc(funcHandler))
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippet", showSnippet)
-	mux.HandleFunc("/snippet/create", createSnippet)
+func (a *app) initHandlers() {
+	a.mux.Handle("/handler", &myType{})
+	a.mux.HandleFunc("/handler/function", funcHandler)
 
+	a.mux.Handle("/handler/func", http.HandlerFunc(funcHandler))
+	a.mux.HandleFunc("/", a.home)
+	a.mux.HandleFunc("/snippet", a.showSnippet)
+	a.mux.HandleFunc("/snippet/create", a.createSnippet)
+
+	a.mux.Handle("/static/", initFS())
+}
+
+func initFS() http.Handler {
 	staticFileServer := http.FileServer(http.Dir("../../ui/static"))
 	staticFileHandler := http.StripPrefix("/static", staticFileServer)
 
-	mux.Handle("/static/", staticFileHandler)
+	return staticFileHandler
+}
 
-	srv := &http.Server{
-		Addr:     *addr,
-		ErrorLog: errorLog,
-		Handler:  mux,
-	}
+func main() {
+	app := initApp()
+	app.initHandlers()
 
-	infoLog.Printf("Starting server on %s", *addr)
+	srv := app.createServer()
+
+	app.infoLog.Printf("Starting server on %s", srv.Addr)
 	err := srv.ListenAndServe()
-	errorLog.Fatal(err)
+	app.errorLog.Fatal(err)
 }
