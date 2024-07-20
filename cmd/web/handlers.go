@@ -23,7 +23,6 @@ func (a *app) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// w.Write([]byte("Hello from quickbits!\n"))
 	files := []string{
 		"./ui/html/home.page.tmpl",
 		"./ui/html/footer.partial.tmpl",
