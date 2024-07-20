@@ -32,17 +32,13 @@ func (a *app) home(w http.ResponseWriter, r *http.Request) {
 
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		a.errorLog.Fatal(err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-
+		a.serverError(w, err)
 		return
 	}
 
 	err = ts.Execute(w, nil)
 	if err != nil {
-		a.errorLog.Fatal(err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-
+		a.serverError(w, err)
 		return
 	}
 }
@@ -51,7 +47,7 @@ func (a *app) showSnippet(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 
 	if err != nil || id < 1 {
-		http.NotFound(w, r)
+		a.notFound(w)
 		return
 	}
 
@@ -60,8 +56,8 @@ func (a *app) showSnippet(w http.ResponseWriter, r *http.Request) {
 
 func (a *app) createSnippet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		w.Header().Set("Allow", "POST")
-		http.Error(w, "Method not allowed\n", http.StatusMethodNotAllowed)
+		w.Header().Set("Allow", http.MethodPost)
+		a.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
 
