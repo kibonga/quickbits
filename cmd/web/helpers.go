@@ -13,7 +13,6 @@ func (a *app) httpError(w http.ResponseWriter, status int) {
 func (a *app) serverError(w http.ResponseWriter, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
 
-	// a.errorLog.Fatal(trace)
 	a.errorLog.Output(2, trace)
 
 	a.httpError(w, http.StatusInternalServerError)
