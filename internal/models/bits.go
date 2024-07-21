@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -35,7 +36,22 @@ func (m *BitModel) Insert(title string, content string, daysValid int) (int, err
 }
 
 func (m *BitModel) Get(id int) (*Bit, error) {
-	return nil, nil
+	stmt := `select id, title, content, created, expires
+	from bits where id = ? and expires > utc_timestamp()`
+
+	row := m.DB.QueryRow(stmt, id)
+
+	b := &Bit{}
+
+	err := row.Scan(&b.Id, &b.Title, &b.Content, &b.CreatedAt, &b.ExpiresAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, sql.ErrNoRows
+		}
+		return nil, err
+	}
+
+	return b, nil
 }
 
 func (m *BitModel) Latest() ([]*BitModel, error) {
