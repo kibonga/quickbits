@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"kibonga/quickbits/internal/models"
 	"net/http"
 	"strconv"
 	"text/template"
@@ -50,7 +52,16 @@ func (a *app) showBit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Display a specific snippet with ID %d\n", id)
+	b, err := a.bits.Get(id)
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			a.notFound(w)
+			return
+		}
+		a.serverError(w, err)
+	}
+
+	fmt.Fprintf(w, "%+v", b)
 }
 
 func (a *app) createBit(w http.ResponseWriter, r *http.Request) {

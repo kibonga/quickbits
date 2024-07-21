@@ -43,6 +43,8 @@ func initApp() *app {
 		infoLog:  log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
 		errorLog: log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
 		flags:    parseCLIFlags(),
+		bits:     &models.BitModel{},
+		db:       nil,
 	}
 }
 
@@ -65,7 +67,7 @@ func (a *app) DB() {
 	if err != nil {
 		a.errorLog.Fatal(err)
 	}
-	a.bits = &models.BitModel{DB: db}
+	a.bits.DB = db
 	a.db = db
 }
 
