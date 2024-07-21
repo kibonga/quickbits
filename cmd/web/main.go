@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"kibonga/quickbits/internal/models"
 	"log"
 	"net/http"
 	"os"
@@ -13,24 +14,26 @@ import (
 type app struct {
 	errorLog *log.Logger
 	infoLog  *log.Logger
+	bits     *models.BitModel
+	flags    *flags
+	db       *sql.DB
+}
+
+type flags struct {
+	dsn  string
+	addr string
 }
 
 func main() {
 	app := initApp()
 
+	app.DB()
+	defer app.db.Close()
+
 	srv := app.createServer()
-	app.infoLog.Printf("address: %s", srv.Addr)
-
-	dsn := "web2:pass@tcp(quickbits_mysql:3306)/quickbits?parseTime=true"
-	db, err := connectDb(dsn)
-	if err != nil {
-		app.errorLog.Fatal(err)
-	}
-
-	defer db.Close()
 
 	app.infoLog.Printf("Starting server on %s", srv.Addr)
-	err = srv.ListenAndServe()
+	err := srv.ListenAndServe()
 	app.errorLog.Fatal(err)
 }
 
@@ -38,18 +41,28 @@ func initApp() *app {
 	return &app{
 		infoLog:  log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
 		errorLog: log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
+		flags:    parseCLIFlags(),
 	}
 }
 
-func (a *app) createServer() *http.Server {
+func parseCLIFlags() *flags {
+	dsn := flag.String("dsn", "", "Database DSN")
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	flag.Parse()
 
-	return &http.Server{
-		Addr:     *addr,
-		ErrorLog: a.errorLog,
-		Handler:  a.routes(),
+	return &flags{
+		addr: *addr,
+		dsn:  *dsn,
 	}
+}
+
+func (a *app) DB() {
+	db, err := connectDb(a.flags.dsn)
+	if err != nil {
+		a.errorLog.Fatal(err)
+	}
+	a.bits = &models.BitModel{DB: db}
+	a.db = db
 }
 
 func connectDb(dsn string) (*sql.DB, error) {
@@ -61,4 +74,12 @@ func connectDb(dsn string) (*sql.DB, error) {
 		return nil, err
 	}
 	return db, nil
+}
+
+func (a *app) createServer() *http.Server {
+	return &http.Server{
+		Addr:     a.flags.addr,
+		ErrorLog: a.errorLog,
+		Handler:  a.routes(),
+	}
 }
