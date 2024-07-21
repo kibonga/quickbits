@@ -46,7 +46,7 @@ func initApp() *app {
 }
 
 func parseCLIFlags() *flags {
-	dsn := flag.String("dsn", "", "Database DSN")
+	dsn := flag.String("dsn", "web:pass@tcp(quickbits_mysql:3306)/quickbits?parseTime=true", "Database DSN")
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	flag.Parse()
 

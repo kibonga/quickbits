@@ -42,7 +42,7 @@ func (a *app) home(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a *app) showSnippet(w http.ResponseWriter, r *http.Request) {
+func (a *app) showBit(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 
 	if err != nil || id < 1 {
@@ -53,12 +53,19 @@ func (a *app) showSnippet(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Display a specific snippet with ID %d\n", id)
 }
 
-func (a *app) createSnippet(w http.ResponseWriter, r *http.Request) {
+func (a *app) createBit(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		w.Header().Set("Allow", http.MethodPost)
 		a.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
 
-	w.Write([]byte("Create a new snippet...\n"))
+	id, err := a.bits.Insert("title", "content", 1)
+	if err != nil {
+		a.serverError(w, err)
+		return
+	}
+
+	a.infoLog.Printf("Inserted bit with ID %d\n", id)
+	http.Redirect(w, r, fmt.Sprintf("/bit/view?id=%d", id), http.StatusSeeOther)
 }
