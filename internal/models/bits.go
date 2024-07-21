@@ -54,6 +54,29 @@ func (m *BitModel) Get(id int) (*Bit, error) {
 	return b, nil
 }
 
-func (m *BitModel) Latest() ([]*BitModel, error) {
-	return nil, nil
+func (m *BitModel) Latest() ([]*Bit, error) {
+	stmt := `select id, title, content, created, expires 
+	from bits where expires > utc_timestamp() order by id limit 10`
+	rows, err := m.DB.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var bits []*Bit
+	for rows.Next() {
+		var b = &Bit{}
+		err = rows.Scan(&b.Id, &b.Title, &b.Content, &b.CreatedAt, &b.ExpiresAt)
+		if err != nil {
+			return nil, err
+		}
+		bits = append(bits, b)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return bits, nil
 }

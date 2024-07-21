@@ -6,7 +6,6 @@ import (
 	"kibonga/quickbits/internal/models"
 	"net/http"
 	"strconv"
-	"text/template"
 )
 
 type myType struct{}
@@ -25,23 +24,33 @@ func (a *app) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	files := []string{
-		fmt.Sprintf("%s%s", a.flags.htmlPath, "ui/html/home.page.tmpl"),
-		fmt.Sprintf("%s%s", a.flags.htmlPath, "ui/html/footer.partial.tmpl"),
-		fmt.Sprintf("%s%s", a.flags.htmlPath, "ui/html/base.layout.tmpl"),
-	}
-
-	ts, err := template.ParseFiles(files...)
+	bits, err := a.bits.Latest()
 	if err != nil {
 		a.serverError(w, err)
 		return
 	}
 
-	err = ts.Execute(w, nil)
-	if err != nil {
-		a.serverError(w, err)
-		return
+	for _, b := range bits {
+		fmt.Fprintf(w, "%+v\n", b)
 	}
+
+	// files := []string{
+	// 	fmt.Sprintf("%s%s", a.flags.htmlPath, "ui/html/home.page.tmpl"),
+	// 	fmt.Sprintf("%s%s", a.flags.htmlPath, "ui/html/footer.partial.tmpl"),
+	// 	fmt.Sprintf("%s%s", a.flags.htmlPath, "ui/html/base.layout.tmpl"),
+	// }
+
+	// ts, err := template.ParseFiles(files...)
+	// if err != nil {
+	// 	a.serverError(w, err)
+	// 	return
+	// }
+
+	// err = ts.Execute(w, nil)
+	// if err != nil {
+	// 	a.serverError(w, err)
+	// 	return
+	// }
 }
 
 func (a *app) showBit(w http.ResponseWriter, r *http.Request) {
