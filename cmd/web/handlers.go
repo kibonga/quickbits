@@ -24,9 +24,9 @@ func (a *app) home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	files := []string{
-		"./ui/html/home.page.tmpl",
-		"./ui/html/footer.partial.tmpl",
-		"./ui/html/base.layout.tmpl",
+		fmt.Sprintf("%s%s", a.flags.htmlPath, "ui/html/home.page.tmpl"),
+		fmt.Sprintf("%s%s", a.flags.htmlPath, "ui/html/footer.partial.tmpl"),
+		fmt.Sprintf("%s%s", a.flags.htmlPath, "ui/html/base.layout.tmpl"),
 	}
 
 	ts, err := template.ParseFiles(files...)
