@@ -20,8 +20,9 @@ type app struct {
 }
 
 type flags struct {
-	dsn  string
-	addr string
+	dsn      string
+	addr     string
+	htmlPath string
 }
 
 func main() {
@@ -46,13 +47,16 @@ func initApp() *app {
 }
 
 func parseCLIFlags() *flags {
-	dsn := flag.String("dsn", "web:pass@tcp(quickbits_mysql:3306)/quickbits?parseTime=true", "Database DSN")
+	dsn := flag.String("dsn", "web:pass@/quickbits_local?parseTime=true", "Database DSN")
 	addr := flag.String("addr", ":4000", "HTTP network address")
+	htmlPath := flag.String("htmlPath", "../../", "Path to HTML")
+
 	flag.Parse()
 
 	return &flags{
-		addr: *addr,
-		dsn:  *dsn,
+		addr:     *addr,
+		dsn:      *dsn,
+		htmlPath: *htmlPath,
 	}
 }
 

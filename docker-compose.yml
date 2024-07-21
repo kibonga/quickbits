@@ -4,7 +4,7 @@ services:
     container_name: quickbits_mysql
     environment:
       MYSQL_PASSWORD: pass
-      MYSQL_DATABASE: quickbits_db
+      MYSQL_DATABASE: quickbits
       MYSQL_USER: web
       MYSQL_ROOT_PASSWORD: rootassword123
     ports:
@@ -13,6 +13,11 @@ services:
       - quickbit_net
     volumes: 
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h mysql -u web -pass"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   app:
     image: quickbits_img
@@ -25,8 +30,9 @@ services:
     networks:
       - quickbit_net
     depends_on:
-      - mysql
-    command: /app/main -addr=:4000 -dsn="web2:pass@tcp(quickbits_mysql:3306)/quickbits?parseTime=true"
+      mysql:
+        condition: service_healthy
+    command: /app/main -addr=:4000 -dsn=web:pass@tcp(quickbits_mysql:3306)/quickbits?parseTime=true -htmlPath=""
 
 volumes:
   mysql_data: 
