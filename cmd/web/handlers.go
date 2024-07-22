@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html/template"
 	"kibonga/quickbits/internal/models"
 	"net/http"
 	"strconv"
@@ -32,25 +31,11 @@ func (a *app) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	files := []string{
-		fmt.Sprintf("%s%s", a.cliFlags.htmlPath, "ui/html/base.layout.tmpl"),
-		fmt.Sprintf("%s%s", a.cliFlags.htmlPath, "ui/html/home.page.tmpl"),
-		fmt.Sprintf("%s%s", a.cliFlags.htmlPath, "ui/html/footer.partial.tmpl"),
-	}
-
-	tmpl, err := template.ParseFiles(files...)
-	if err != nil {
-		a.serverError(w, err)
-		return
-	}
-
 	data := &templateData{
 		Bits: bits,
 	}
 
-	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
-		a.serverError(w, err)
-	}
+	a.render(w, http.StatusOK, "home.tmpl", data)
 }
 
 func (a *app) viewBit(w http.ResponseWriter, r *http.Request) {
@@ -71,26 +56,11 @@ func (a *app) viewBit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	files := []string{
-		fmt.Sprintf("%s%s", a.cliFlags.htmlPath, "ui/html/base.layout.tmpl"),
-		fmt.Sprintf("%s%s", a.cliFlags.htmlPath, "ui/html/footer.partial.tmpl"),
-		fmt.Sprintf("%s%s", a.cliFlags.htmlPath, "ui/html/view.page.tmpl"),
-	}
-
-	tmpl, err := template.ParseFiles(files...)
-	if err != nil {
-		a.serverError(w, err)
-		return
-	}
-
 	data := &templateData{
 		Bit: b,
 	}
 
-	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
-		a.serverError(w, err)
-		return
-	}
+	a.render(w, http.StatusOK, "view.tmpl", data)
 }
 
 func (a *app) createBit(w http.ResponseWriter, r *http.Request) {
@@ -142,5 +112,5 @@ func (a *app) updateBit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a.infoLog.Printf("updated bit with ID %d\n", id)
-	http.Redirect(w, r, fmt.Sprintf("/bit/view?id=%d", id), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/bits/view?id=%d", id), http.StatusSeeOther)
 }

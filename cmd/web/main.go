@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"html/template"
 	"kibonga/quickbits/internal/models"
 	"log"
 	"net/http"
@@ -12,11 +13,12 @@ import (
 )
 
 type app struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	bitModel *models.BitModel
-	cliFlags *cliFlags
-	db       *sql.DB
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	bitModel      *models.BitModel
+	cliFlags      *cliFlags
+	db            *sql.DB
+	templateCache map[string]*template.Template
 }
 
 type cliFlags struct {
@@ -26,28 +28,45 @@ type cliFlags struct {
 }
 
 func main() {
-	app := initApp()
+	cliFlags := parseCLIFlags()
 
-	app.db = app.connectDb()
-	defer app.db.Close()
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
-	app.addBitModel()
-
-	srv := app.createServer()
-
-	app.infoLog.Printf("Starting server on %s", srv.Addr)
-	err := srv.ListenAndServe()
-	app.errorLog.Fatal(err)
-}
-
-func initApp() *app {
-	return &app{
-		infoLog:  log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
-		errorLog: log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
-		cliFlags: parseCLIFlags(),
-		db:       nil,
-		bitModel: nil,
+	db, err := openMysqlConn(cliFlags.dsn)
+	if err != nil {
+		errorLog.Fatal(err)
 	}
+	defer db.Close()
+
+	bitModel, err := models.CreateBitModel(db)
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+
+	tmplCache, err := createTemplateCache(cliFlags.htmlPath)
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+
+	app := &app{
+		errorLog:      errorLog,
+		infoLog:       infoLog,
+		bitModel:      bitModel,
+		cliFlags:      cliFlags,
+		db:            db,
+		templateCache: tmplCache,
+	}
+
+	srv := &http.Server{
+		Addr:     cliFlags.addr,
+		ErrorLog: errorLog,
+		Handler:  app.routes(),
+	}
+
+	infoLog.Printf("Starting server on %s", srv.Addr)
+	err = srv.ListenAndServe()
+	errorLog.Fatal(err)
 }
 
 func parseCLIFlags() *cliFlags {
@@ -64,15 +83,6 @@ func parseCLIFlags() *cliFlags {
 	}
 }
 
-func (a *app) connectDb() *sql.DB {
-	db, err := openMysqlConn(a.cliFlags.dsn)
-	if err != nil {
-		a.errorLog.Fatal(err)
-	}
-
-	return db
-}
-
 func openMysqlConn(dsn string) (*sql.DB, error) {
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
@@ -84,21 +94,4 @@ func openMysqlConn(dsn string) (*sql.DB, error) {
 	}
 
 	return db, nil
-}
-
-func (a *app) createServer() *http.Server {
-	return &http.Server{
-		Addr:     a.cliFlags.addr,
-		ErrorLog: a.errorLog,
-		Handler:  a.routes(),
-	}
-}
-
-func (a *app) addBitModel() {
-	bitModel, err := models.CreateBitModel(a.db)
-	if err != nil {
-		a.errorLog.Fatal(err)
-	}
-
-	a.bitModel = bitModel
 }
