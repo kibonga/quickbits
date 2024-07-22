@@ -10,11 +10,11 @@ func (a *app) routes() *http.ServeMux {
 
 	mux.Handle("/handler/func", http.HandlerFunc(funcHandler))
 	mux.HandleFunc("/", a.home)
-	mux.HandleFunc("/bit/view", a.showBit)
-	mux.HandleFunc("/bit/create", a.createBit)
+	mux.HandleFunc("/bits/view", a.viewBit)
+	mux.HandleFunc("/bits/create", a.createBit)
 
 	// Transaction
-	mux.HandleFunc("/bit/update", a.updateBit)
+	mux.HandleFunc("/bits/update", a.updateBit)
 
 	mux.Handle("/static/", initFS())
 
