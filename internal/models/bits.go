@@ -14,8 +14,15 @@ type Bit struct {
 	ExpiresAt time.Time
 }
 
+type UpdateBit struct {
+	Title   string `json:"title"`
+	Content string `json:"content"`
+}
+
 type BitModel struct {
-	DB *sql.DB
+	DB             *sql.DB
+	UpdateStmt     *sql.Stmt
+	SelectByIdStmt *sql.Stmt
 }
 
 func (m *BitModel) Insert(title string, content string, daysValid int) (int, error) {
@@ -79,4 +86,71 @@ func (m *BitModel) Latest() ([]*Bit, error) {
 	}
 
 	return bits, nil
+}
+
+func (m *BitModel) Update(id int, b *UpdateBit) error {
+	tx, err := m.DB.Begin()
+
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+
+	var rid int
+	err = tx.Stmt(m.SelectByIdStmt).QueryRow(id).Scan(&rid)
+	if rid == 0 {
+		return ErrNoRecord
+	}
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Stmt(m.UpdateStmt).Exec(b.Title, b.Content, id)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func updateStmt(db *sql.DB) (*sql.Stmt, error) {
+	updateQuery := `update bits set title = ?, content = ? where id = ?`
+	stmt, err := db.Prepare(updateQuery)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return stmt, nil
+}
+
+func selectByIdStmt(db *sql.DB) (*sql.Stmt, error) {
+	query := `select count(id) from bits where id = ?`
+	stmt, err := db.Prepare(query)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return stmt, nil
+}
+
+func CreateBitModel(db *sql.DB) (*BitModel, error) {
+
+	updateStmt, err := updateStmt(db)
+	if err != nil {
+		return nil, err
+	}
+
+	selectByIdStmt, err := selectByIdStmt(db)
+	if err != nil {
+		return nil, err
+	}
+
+	return &BitModel{
+		DB:             db,
+		UpdateStmt:     updateStmt,
+		SelectByIdStmt: selectByIdStmt,
+	}, nil
 }
