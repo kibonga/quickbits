@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"kibonga/quickbits/internal/models"
 	"net/http"
 	"strconv"
@@ -72,7 +73,28 @@ func (a *app) showBit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "%+v", b)
+	files := []string{
+		fmt.Sprintf("%s%s", a.cliFlags.htmlPath, "ui/html/base.layout.tmpl"),
+		fmt.Sprintf("%s%s", a.cliFlags.htmlPath, "ui/html/footer.partial.tmpl"),
+		fmt.Sprintf("%s%s", a.cliFlags.htmlPath, "ui/html/view.page.tmpl"),
+	}
+
+	tmpl, err := template.ParseFiles(files...)
+	if err != nil {
+		a.serverError(w, err)
+		return
+	}
+
+	data := &templateData{
+		Bit: b,
+	}
+
+	err = tmpl.ExecuteTemplate(w, "base", data)
+	if err != nil {
+		a.serverError(w, err)
+		return
+	}
+
 }
 
 func (a *app) createBit(w http.ResponseWriter, r *http.Request) {
