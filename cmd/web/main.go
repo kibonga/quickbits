@@ -14,12 +14,12 @@ import (
 type app struct {
 	errorLog *log.Logger
 	infoLog  *log.Logger
-	bits     *models.BitModel
-	flags    *flags
+	bitModel *models.BitModel
+	cliFlags *cliFlags
 	db       *sql.DB
 }
 
-type flags struct {
+type cliFlags struct {
 	dsn      string
 	addr     string
 	htmlPath string
@@ -28,8 +28,10 @@ type flags struct {
 func main() {
 	app := initApp()
 
-	app.DB()
+	app.db = app.connectDb()
 	defer app.db.Close()
+
+	app.addBitModel()
 
 	srv := app.createServer()
 
@@ -42,50 +44,61 @@ func initApp() *app {
 	return &app{
 		infoLog:  log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
 		errorLog: log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
-		flags:    parseCLIFlags(),
-		bits:     &models.BitModel{},
+		cliFlags: parseCLIFlags(),
 		db:       nil,
+		bitModel: nil,
 	}
 }
 
-func parseCLIFlags() *flags {
+func parseCLIFlags() *cliFlags {
 	dsn := flag.String("dsn", "web:pass@/quickbits_local?parseTime=true", "Database DSN")
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	htmlPath := flag.String("htmlPath", "../../", "Path to HTML")
 
 	flag.Parse()
 
-	return &flags{
+	return &cliFlags{
 		addr:     *addr,
 		dsn:      *dsn,
 		htmlPath: *htmlPath,
 	}
 }
 
-func (a *app) DB() {
-	db, err := connectDb(a.flags.dsn)
+func (a *app) connectDb() *sql.DB {
+	db, err := openMysqlConn(a.cliFlags.dsn)
 	if err != nil {
 		a.errorLog.Fatal(err)
 	}
-	a.bits.DB = db
-	a.db = db
+
+	return db
 }
 
-func connectDb(dsn string) (*sql.DB, error) {
+func openMysqlConn(dsn string) (*sql.DB, error) {
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return nil, err
 	}
+
 	if err = db.Ping(); err != nil {
 		return nil, err
 	}
+
 	return db, nil
 }
 
 func (a *app) createServer() *http.Server {
 	return &http.Server{
-		Addr:     a.flags.addr,
+		Addr:     a.cliFlags.addr,
 		ErrorLog: a.errorLog,
 		Handler:  a.routes(),
 	}
+}
+
+func (a *app) addBitModel() {
+	bitModel, err := models.CreateBitModel(a.db)
+	if err != nil {
+		a.errorLog.Fatal(err)
+	}
+
+	a.bitModel = bitModel
 }

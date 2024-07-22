@@ -13,6 +13,9 @@ func (a *app) routes() *http.ServeMux {
 	mux.HandleFunc("/bit", a.showBit)
 	mux.HandleFunc("/bit/create", a.createBit)
 
+	// Transaction
+	mux.HandleFunc("/bit/update", a.updateBit)
+
 	mux.Handle("/static/", initFS())
 
 	return mux
