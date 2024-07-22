@@ -32,30 +32,28 @@ func (a *app) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, b := range bits {
-		fmt.Fprintf(w, "%+v\n", b)
+	files := []string{
+		fmt.Sprintf("%s%s", a.cliFlags.htmlPath, "ui/html/base.layout.tmpl"),
+		fmt.Sprintf("%s%s", a.cliFlags.htmlPath, "ui/html/home.page.tmpl"),
+		fmt.Sprintf("%s%s", a.cliFlags.htmlPath, "ui/html/footer.partial.tmpl"),
 	}
 
-	// files := []string{
-	// 	fmt.Sprintf("%s%s", a.flags.htmlPath, "ui/html/home.page.tmpl"),
-	// 	fmt.Sprintf("%s%s", a.flags.htmlPath, "ui/html/footer.partial.tmpl"),
-	// 	fmt.Sprintf("%s%s", a.flags.htmlPath, "ui/html/base.layout.tmpl"),
-	// }
+	tmpl, err := template.ParseFiles(files...)
+	if err != nil {
+		a.serverError(w, err)
+		return
+	}
 
-	// ts, err := template.ParseFiles(files...)
-	// if err != nil {
-	// 	a.serverError(w, err)
-	// 	return
-	// }
+	data := &templateData{
+		Bits: bits,
+	}
 
-	// err = ts.Execute(w, nil)
-	// if err != nil {
-	// 	a.serverError(w, err)
-	// 	return
-	// }
+	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
+		a.serverError(w, err)
+	}
 }
 
-func (a *app) showBit(w http.ResponseWriter, r *http.Request) {
+func (a *app) viewBit(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 
 	if err != nil || id < 1 {
@@ -89,12 +87,10 @@ func (a *app) showBit(w http.ResponseWriter, r *http.Request) {
 		Bit: b,
 	}
 
-	err = tmpl.ExecuteTemplate(w, "base", data)
-	if err != nil {
+	if err := tmpl.ExecuteTemplate(w, "base", data); err != nil {
 		a.serverError(w, err)
 		return
 	}
-
 }
 
 func (a *app) createBit(w http.ResponseWriter, r *http.Request) {
