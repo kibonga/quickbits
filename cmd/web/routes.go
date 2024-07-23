@@ -2,7 +2,8 @@ package main
 
 import "net/http"
 
-func (a *app) routes() *http.ServeMux {
+func (a *app) routes() http.Handler {
+
 	mux := http.NewServeMux()
 
 	mux.Handle("/handler", &myType{})
@@ -16,12 +17,17 @@ func (a *app) routes() *http.ServeMux {
 	// Transaction
 	mux.HandleFunc("/bits/update", a.updateBit)
 
-	mux.Handle("/static/", initFS())
+	mux.Handle("/static/", staticFileServer())
 
-	return mux
+	headersMiddleware := a.secureHeaders(mux)
+	beforeMiddleware := a.beforeMiddleware(headersMiddleware)
+	loggerMiddleware := a.logRequest(beforeMiddleware)
+	afterMiddleware := a.afterMiddleware(loggerMiddleware)
+
+	return afterMiddleware
 }
 
-func initFS() http.Handler {
+func staticFileServer() http.Handler {
 	staticFileServer := http.FileServer(http.Dir("../../ui/static"))
 	staticFileHandler := http.StripPrefix("/static", staticFileServer)
 
