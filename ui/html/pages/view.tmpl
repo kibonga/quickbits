@@ -11,8 +11,8 @@
     </div>
     <pre><code>{{.Content}}</code></pre>
     <div class='metadata'>
-        <time>Created: {{.CreatedAt}}</time>
-        <time>Expires: {{.ExpiresAt}}</time>
+        <time>{{humanDate .CreatedAt | printf "created at: %s"}}</time>
+        <time>{{.ExpiresAt | humanDate | printf "expires at: %s"}}</time>
     </div>
 </div>
 {{end}}
