@@ -23,8 +23,9 @@ func (a *app) routes() http.Handler {
 	beforeMiddleware := a.beforeMiddleware(headersMiddleware)
 	loggerMiddleware := a.logRequest(beforeMiddleware)
 	afterMiddleware := a.afterMiddleware(loggerMiddleware)
+	panicMiddleware := a.recoverPanic(afterMiddleware)
 
-	return afterMiddleware
+	return panicMiddleware
 }
 
 func staticFileServer() http.Handler {
