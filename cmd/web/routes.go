@@ -1,6 +1,10 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/justinas/alice"
+)
 
 func (a *app) routes() http.Handler {
 
@@ -19,13 +23,15 @@ func (a *app) routes() http.Handler {
 
 	mux.Handle("/static/", staticFileServer())
 
-	headersMiddleware := a.secureHeaders(mux)
-	beforeMiddleware := a.beforeMiddleware(headersMiddleware)
-	loggerMiddleware := a.logRequest(beforeMiddleware)
-	afterMiddleware := a.afterMiddleware(loggerMiddleware)
-	panicMiddleware := a.recoverPanic(afterMiddleware)
+	common := alice.New(a.recoverPanic, a.afterMiddleware, a.logRequest, a.beforeMiddleware, a.secureHeaders)
 
-	return panicMiddleware
+	// headersMiddleware := a.secureHeaders(mux)
+	// beforeMiddleware := a.beforeMiddleware(headersMiddleware)
+	// loggerMiddleware := a.logRequest(beforeMiddleware)
+	// afterMiddleware := a.afterMiddleware(loggerMiddleware)
+	// panicMiddleware := a.recoverPanic(afterMiddleware)
+
+	return common.Then(mux)
 }
 
 func staticFileServer() http.Handler {
