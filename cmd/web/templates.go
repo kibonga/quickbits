@@ -26,7 +26,9 @@ func createTemplateCache(htmlPath string) (map[string]*template.Template, error)
 	for _, page := range pages {
 		name := filepath.Base(page)
 
-		tmpl, err := template.ParseFiles(fmt.Sprintf("%s%s", htmlPath, "ui/html/base.tmpl"))
+		tmpl := template.New(name).Funcs(functions)
+
+		tmpl, err := tmpl.ParseFiles(fmt.Sprintf("%s%s", htmlPath, "ui/html/base.tmpl"))
 		if err != nil {
 			return nil, err
 		}
@@ -51,4 +53,12 @@ func (a *app) newTemplateData(r *http.Request) *templateData {
 	return &templateData{
 		CopyrightYear: time.Now().Year(),
 	}
+}
+
+func humanDate(t time.Time) string {
+	return t.Format("02 Jan 2006 at 15:04")
+}
+
+var functions = template.FuncMap{
+	"humanDate": humanDate,
 }

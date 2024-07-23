@@ -17,7 +17,7 @@ Home
     <tr>
         <td>{{.Id}}</td>
         <td><a href="/bits/view?id={{.Id}}">{{.Title}}</a></td>
-        <td>{{.CreatedAt}}</td>
+        <td>{{humanDate .CreatedAt}}</td>
     </tr>
     {{end}}
 </table>
