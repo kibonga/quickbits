@@ -31,9 +31,8 @@ func (a *app) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := &templateData{
-		Bits: bits,
-	}
+	data := a.newTemplateData(r)
+	data.Bits = bits
 
 	a.render(w, http.StatusOK, "home.tmpl", data)
 }
@@ -56,9 +55,8 @@ func (a *app) viewBit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := &templateData{
-		Bit: b,
-	}
+	data := a.newTemplateData(r)
+	data.Bit = b
 
 	a.render(w, http.StatusOK, "view.tmpl", data)
 }

@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"html/template"
 	"kibonga/quickbits/internal/models"
+	"net/http"
 	"path/filepath"
+	"time"
 )
 
 type templateData struct {
-	Bit  *models.Bit
-	Bits []*models.Bit
+	Bit           *models.Bit
+	Bits          []*models.Bit
+	CopyrightYear int
 }
 
 func createTemplateCache(htmlPath string) (map[string]*template.Template, error) {
@@ -42,4 +45,10 @@ func createTemplateCache(htmlPath string) (map[string]*template.Template, error)
 	}
 
 	return cache, nil
+}
+
+func (a *app) newTemplateData(r *http.Request) *templateData {
+	return &templateData{
+		CopyrightYear: time.Now().Year(),
+	}
 }
