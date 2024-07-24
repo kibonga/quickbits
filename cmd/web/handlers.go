@@ -7,6 +7,8 @@ import (
 	"kibonga/quickbits/internal/models"
 	"net/http"
 	"strconv"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 type myType struct{}
@@ -19,12 +21,7 @@ func funcHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("This is my custom handler function"))
 }
 
-func (a *app) home(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return
-	}
-
+func (a *app) bitsIndex(w http.ResponseWriter, r *http.Request) {
 	bits, err := a.bitModel.Latest()
 	if err != nil {
 		a.serverError(w, err)
@@ -37,8 +34,10 @@ func (a *app) home(w http.ResponseWriter, r *http.Request) {
 	a.render(w, http.StatusOK, "home.tmpl", data)
 }
 
-func (a *app) viewBit(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+func (a *app) bitsView(w http.ResponseWriter, r *http.Request) {
+	params := httprouter.ParamsFromContext(r.Context())
+
+	id, err := strconv.Atoi(params.ByName("id"))
 
 	if err != nil || id < 1 {
 		a.notFound(w)
@@ -61,13 +60,7 @@ func (a *app) viewBit(w http.ResponseWriter, r *http.Request) {
 	a.render(w, http.StatusOK, "view.tmpl", data)
 }
 
-func (a *app) createBit(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		w.Header().Set("Allow", http.MethodPost)
-		a.clientError(w, http.StatusMethodNotAllowed)
-		return
-	}
-
+func (a *app) bitsCreate(w http.ResponseWriter, r *http.Request) {
 	id, err := a.bitModel.Insert("title", "content", 1)
 	if err != nil {
 		a.serverError(w, err)
@@ -76,6 +69,10 @@ func (a *app) createBit(w http.ResponseWriter, r *http.Request) {
 
 	a.infoLog.Printf("Inserted bit with ID %d\n", id)
 	http.Redirect(w, r, fmt.Sprintf("/bit/view?id=%d", id), http.StatusSeeOther)
+}
+
+func (a *app) bitsNew(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Display bit form for creating new bit"))
 }
 
 func (a *app) updateBit(w http.ResponseWriter, r *http.Request) {

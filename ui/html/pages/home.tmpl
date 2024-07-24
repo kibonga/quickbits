@@ -16,7 +16,7 @@ Home
     {{range .Bits}}
     <tr>
         <td>{{.Id}}</td>
-        <td><a href="/bits/view?id={{.Id}}">{{.Title}}</a></td>
+        <td><a href="/bits/view/{{.Id}}">{{.Title}}</a></td>
         <td>{{humanDate .CreatedAt}}</td>
     </tr>
     {{end}}
