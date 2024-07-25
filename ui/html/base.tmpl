@@ -17,6 +17,9 @@
             <a href="/bits/create">Create Bit</a>
         </nav>
         <section>
+            {{with .Flash}}
+            <div class='flash'>{{.}}</div>
+            {{end}}
             {{template "body" .}}
         </section>
         {{template "footer" .}}

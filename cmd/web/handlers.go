@@ -43,7 +43,7 @@ func (a *app) bitsIndex(w http.ResponseWriter, r *http.Request) {
 	a.render(w, http.StatusOK, "home.tmpl", data)
 }
 
-func (a *app) bitView(w http.ResponseWriter, r *http.Request) {
+func (a *app) bitsView(w http.ResponseWriter, r *http.Request) {
 	params := httprouter.ParamsFromContext(r.Context())
 
 	id, err := strconv.Atoi(params.ByName("id"))
@@ -69,7 +69,7 @@ func (a *app) bitView(w http.ResponseWriter, r *http.Request) {
 	a.render(w, http.StatusOK, "view.tmpl", data)
 }
 
-func (a *app) bitCreate(w http.ResponseWriter, r *http.Request) {
+func (a *app) bitsCreate(w http.ResponseWriter, r *http.Request) {
 	// bit := &models.InsertBit{}
 	// if err := json.NewDecoder(r.Body).Decode(&bit); err != nil {
 	// 	fmt.Println(err)
@@ -109,11 +109,13 @@ func (a *app) bitCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	a.sessionManager.Put(r.Context(), "flash", "Bit created successfully!")
+
 	a.infoLog.Printf("Inserted bit with ID %d\n", id)
 	http.Redirect(w, r, fmt.Sprintf("/bits/view/%d", id), http.StatusSeeOther)
 }
 
-func (a *app) bitCreateForm(w http.ResponseWriter, r *http.Request) {
+func (a *app) bitsCreateForm(w http.ResponseWriter, r *http.Request) {
 	// w.Write([]byte("Display bit form for creating new bit"))
 	data := a.newTemplateData(r)
 	data.Form = &bitCreateForm{
@@ -122,7 +124,7 @@ func (a *app) bitCreateForm(w http.ResponseWriter, r *http.Request) {
 	a.render(w, http.StatusOK, "create.tmpl", data)
 }
 
-func (a *app) updateBit(w http.ResponseWriter, r *http.Request) {
+func (a *app) bitsUpdate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "PUT" && r.Method != "PATCH" {
 		w.Header().Set("Allow", http.MethodPut+http.MethodPatch)
 		a.clientError(w, http.StatusMethodNotAllowed)

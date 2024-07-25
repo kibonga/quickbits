@@ -14,6 +14,7 @@ type templateData struct {
 	Bits          []*models.Bit
 	CopyrightYear int
 	Form          any
+	Flash         string
 }
 
 func createTemplateCache(htmlPath string) (map[string]*template.Template, error) {
@@ -53,6 +54,7 @@ func createTemplateCache(htmlPath string) (map[string]*template.Template, error)
 func (a *app) newTemplateData(r *http.Request) *templateData {
 	return &templateData{
 		CopyrightYear: time.Now().Year(),
+		Flash:         a.sessionManager.PopString(r.Context(), "flash"),
 	}
 }
 
