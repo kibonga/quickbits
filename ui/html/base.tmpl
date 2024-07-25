@@ -13,8 +13,17 @@
             <h1><a href='/'>Quickbits</a></h1>
         </header>
         <nav>
+            <div>
             <a href='/'>Home</a>
             <a href="/bits/create">Create Bit</a>
+            </div>
+            <div>
+                <a href="/user/signup">Signup</a>
+                <a href="/user/login">Login</a>
+                <form action="/user/logout" method="POST">
+                    <button>Logout</button>
+                </form>
+            </div>
         </nav>
         <section>
             {{with .Flash}}

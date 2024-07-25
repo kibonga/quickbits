@@ -28,8 +28,13 @@ func (a *app) routes() http.Handler {
 
 	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(a.bitsIndex))
 	router.Handler(http.MethodGet, "/bits/view/:id", dynamic.ThenFunc(a.bitsView))
-	router.Handler(http.MethodGet, "/bits/create", dynamic.ThenFunc(a.bitsCreateForm))
-	router.Handler(http.MethodPost, "/bits/create", dynamic.ThenFunc(a.bitsCreate))
+	router.Handler(http.MethodGet, "/bits/create", dynamic.ThenFunc(a.bitsCreate))
+	router.Handler(http.MethodPost, "/bits/create", dynamic.ThenFunc(a.bitsCreatePost))
+	router.Handler(http.MethodGet, "/user/signup", dynamic.ThenFunc(a.userSignup))
+	router.Handler(http.MethodPost, "/user/signup", dynamic.ThenFunc(a.userSignupPost))
+	router.Handler(http.MethodGet, "/user/login", dynamic.ThenFunc(a.userLogin))
+	router.Handler(http.MethodPost, "/user/login", dynamic.ThenFunc(a.userLoginPost))
+	router.Handler(http.MethodPost, "/user/logout", dynamic.ThenFunc(a.userLogoutPost))
 
 	// Common middlewares
 	common := alice.New(a.recoverPanic, a.afterMiddleware, a.logRequest, a.beforeMiddleware, a.secureHeaders)
@@ -46,8 +51,8 @@ func (a *app) routesMux() http.Handler {
 	mux.Handle("/handler/func", http.HandlerFunc(funcHandler))
 	mux.HandleFunc("/", a.bitsIndex)
 	mux.HandleFunc("/bits/view", a.bitsView)
-	mux.HandleFunc("/bits/create", a.bitsCreate)
-	mux.HandleFunc("/bits/create/form", a.bitsCreateForm)
+	mux.HandleFunc("/bits/create", a.bitsCreatePost)
+	mux.HandleFunc("/bits/create/form", a.bitsCreate)
 
 	// Transaction
 	mux.HandleFunc("/bits/update", a.bitsUpdate)
