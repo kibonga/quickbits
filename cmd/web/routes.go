@@ -15,17 +15,25 @@ func (a *app) routes() http.Handler {
 	})
 
 	// router.HandlerFunc(http.MethodGet, "/static/", http.StripPrefix("/static", fileServer).(http.HandlerFunc))
-
 	fileServer := http.FileServer(http.Dir("../../ui/static"))
 	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", fileServer))
 
-	router.HandlerFunc(http.MethodGet, "/", a.bitsIndex)
-	router.HandlerFunc(http.MethodGet, "/bits/view/:id", a.bitView)
-	router.HandlerFunc(http.MethodGet, "/bits/create", a.bitCreateForm)
-	router.HandlerFunc(http.MethodPost, "/bits/create", a.bitCreate)
+	dynamic := alice.New(a.sessionManager.LoadAndSave)
 
-	middlewares := alice.New(a.recoverPanic, a.afterMiddleware, a.logRequest, a.beforeMiddleware, a.secureHeaders)
-	return middlewares.Then(router)
+	// Exercise purpose
+	// router.Handler(http.MethodGet, "/", dynamic.Then(http.HandlerFunc(a.bitsIndex)))
+	// router.HandlerFunc(http.MethodGet, "/bits/view/:id", http.HandlerFunc(dynamic.ThenFunc(a.bitView).ServeHTTP))
+	// router.HandlerFunc(http.MethodGet, "/bits/create", dynamic.Then(http.HandlerFunc(a.bitCreateForm)).ServeHTTP)
+	// router.Handler(http.MethodPost, "/bits/create", dynamic.ThenFunc(a.bitCreate))
+
+	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(a.bitsIndex))
+	router.Handler(http.MethodGet, "/bits/view/:id", dynamic.ThenFunc(a.bitView))
+	router.Handler(http.MethodGet, "/bits/create", dynamic.ThenFunc(a.bitCreateForm))
+	router.Handler(http.MethodPost, "/bits/create", dynamic.ThenFunc(a.bitCreate))
+
+	// Common middlewares
+	common := alice.New(a.recoverPanic, a.afterMiddleware, a.logRequest, a.beforeMiddleware, a.secureHeaders)
+	return common.Then(router)
 }
 
 func (a *app) routesMux() http.Handler {

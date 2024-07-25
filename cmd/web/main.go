@@ -8,19 +8,23 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 type app struct {
-	errorLog      *log.Logger
-	infoLog       *log.Logger
-	bitModel      *models.BitModel
-	cliFlags      *cliFlags
-	db            *sql.DB
-	templateCache map[string]*template.Template
-	formDecoder   *form.Decoder
+	errorLog       *log.Logger
+	infoLog        *log.Logger
+	bitModel       *models.BitModel
+	cliFlags       *cliFlags
+	db             *sql.DB
+	templateCache  map[string]*template.Template
+	formDecoder    *form.Decoder
+	sessionManager *scs.SessionManager
 }
 
 type cliFlags struct {
@@ -51,14 +55,19 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
+	sessionManager := scs.New()
+	sessionManager.Store = &mysqlstore.MySQLStore{}
+	sessionManager.Lifetime = 12 * time.Hour
+
 	app := &app{
-		errorLog:      errorLog,
-		infoLog:       infoLog,
-		bitModel:      bitModel,
-		cliFlags:      cliFlags,
-		db:            db,
-		templateCache: tmplCache,
-		formDecoder:   form.NewDecoder(),
+		errorLog:       errorLog,
+		infoLog:        infoLog,
+		bitModel:       bitModel,
+		cliFlags:       cliFlags,
+		db:             db,
+		templateCache:  tmplCache,
+		formDecoder:    form.NewDecoder(),
+		sessionManager: sessionManager,
 	}
 
 	srv := &http.Server{
