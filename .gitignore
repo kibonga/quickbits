@@ -61,3 +61,4 @@ go.work.sum
 # Dependency directories (remove the comment below if you use go modules)
 vendor/
 
+tls/
