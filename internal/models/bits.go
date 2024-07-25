@@ -19,24 +19,40 @@ type UpdateBit struct {
 	Content string `json:"content"`
 }
 
+type InsertBit struct {
+	Title     string `json:"title"`
+	Content   string `json:"content"`
+	DaysValid int    `json:"expires"`
+}
+
 type BitModel struct {
 	DB             *sql.DB
+	InsertStmt     *sql.Stmt
 	UpdateStmt     *sql.Stmt
 	SelectByIdStmt *sql.Stmt
 }
 
-func (m *BitModel) Insert(title string, content string, daysValid int) (int, error) {
-	stmt := `insert into bits (title, content, created, expires)
-	values(?, ?, utc_timestamp(), date_add(utc_timestamp(), interval ? day))`
+func (m *BitModel) Insert(b *InsertBit) (int, error) {
+	tx, err := m.DB.Begin()
 
-	sqlRes, err := m.DB.Exec(stmt, title, content, daysValid)
 	if err != nil {
-		return 0, err
+		return -1, nil
+	}
+
+	defer tx.Rollback()
+
+	sqlRes, err := tx.Stmt(m.InsertStmt).Exec(b.Title, b.Content, b.DaysValid)
+	if err != nil {
+		return -1, nil
 	}
 
 	id, err := sqlRes.LastInsertId()
 	if err != nil {
 		return 0, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return -1, nil
 	}
 
 	return int(id), nil
@@ -114,6 +130,18 @@ func (m *BitModel) Update(id int, b *UpdateBit) error {
 	return tx.Commit()
 }
 
+func insertStmt(db *sql.DB) (*sql.Stmt, error) {
+	insertQuery := `insert into bits (title, content, created, expires)
+	values(?, ?, utc_timestamp(), date_add(utc_timestamp(), interval ? day))`
+	stmt, err := db.Prepare(insertQuery)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return stmt, nil
+}
+
 func updateStmt(db *sql.DB) (*sql.Stmt, error) {
 	updateQuery := `update bits set title = ?, content = ? where id = ?`
 	stmt, err := db.Prepare(updateQuery)
@@ -148,8 +176,14 @@ func CreateBitModel(db *sql.DB) (*BitModel, error) {
 		return nil, err
 	}
 
+	inserStmt, err := insertStmt(db)
+	if err != nil {
+		return nil, err
+	}
+
 	return &BitModel{
 		DB:             db,
+		InsertStmt:     inserStmt,
 		UpdateStmt:     updateStmt,
 		SelectByIdStmt: selectByIdStmt,
 	}, nil

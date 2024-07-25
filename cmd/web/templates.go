@@ -13,6 +13,7 @@ type templateData struct {
 	Bit           *models.Bit
 	Bits          []*models.Bit
 	CopyrightYear int
+	Form          any
 }
 
 func createTemplateCache(htmlPath string) (map[string]*template.Template, error) {

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -19,6 +20,7 @@ type app struct {
 	cliFlags      *cliFlags
 	db            *sql.DB
 	templateCache map[string]*template.Template
+	formDecoder   *form.Decoder
 }
 
 type cliFlags struct {
@@ -56,6 +58,7 @@ func main() {
 		cliFlags:      cliFlags,
 		db:            db,
 		templateCache: tmplCache,
+		formDecoder:   form.NewDecoder(),
 	}
 
 	srv := &http.Server{

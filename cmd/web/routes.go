@@ -14,14 +14,15 @@ func (a *app) routes() http.Handler {
 		a.notFound(w)
 	})
 
-	fileServer := http.FileServer(http.Dir("../../ui/static"))
 	// router.HandlerFunc(http.MethodGet, "/static/", http.StripPrefix("/static", fileServer).(http.HandlerFunc))
-	router.Handler(http.MethodGet, "/static/", http.StripPrefix("static", fileServer))
+
+	fileServer := http.FileServer(http.Dir("../../ui/static"))
+	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", fileServer))
 
 	router.HandlerFunc(http.MethodGet, "/", a.bitsIndex)
-	router.HandlerFunc(http.MethodGet, "/bits/view/:id", a.bitsView)
-	router.HandlerFunc(http.MethodGet, "/bits/create", a.bitsNew)
-	router.HandlerFunc(http.MethodPost, "/bits/create", a.bitsCreate)
+	router.HandlerFunc(http.MethodGet, "/bits/view/:id", a.bitView)
+	router.HandlerFunc(http.MethodGet, "/bits/create", a.bitCreateForm)
+	router.HandlerFunc(http.MethodPost, "/bits/create", a.bitCreate)
 
 	middlewares := alice.New(a.recoverPanic, a.afterMiddleware, a.logRequest, a.beforeMiddleware, a.secureHeaders)
 	return middlewares.Then(router)
@@ -36,13 +37,14 @@ func (a *app) routesMux() http.Handler {
 
 	mux.Handle("/handler/func", http.HandlerFunc(funcHandler))
 	mux.HandleFunc("/", a.bitsIndex)
-	mux.HandleFunc("/bits/view", a.bitsView)
-	mux.HandleFunc("/bits/create", a.bitsCreate)
+	mux.HandleFunc("/bits/view", a.bitView)
+	mux.HandleFunc("/bits/create", a.bitCreate)
+	mux.HandleFunc("/bits/create/form", a.bitCreateForm)
 
 	// Transaction
 	mux.HandleFunc("/bits/update", a.updateBit)
 
-	mux.Handle("/static/", staticFileServer())
+	mux.Handle("/static/", staticFileHandler())
 
 	common := alice.New(a.recoverPanic, a.afterMiddleware, a.logRequest, a.beforeMiddleware, a.secureHeaders)
 
@@ -55,7 +57,7 @@ func (a *app) routesMux() http.Handler {
 	return common.Then(mux)
 }
 
-func staticFileServer() http.Handler {
+func staticFileHandler() http.Handler {
 	staticFileServer := http.FileServer(http.Dir("../../ui/static"))
 	staticFileHandler := http.StripPrefix("/static", staticFileServer)
 
