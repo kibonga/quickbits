@@ -1,8 +1,10 @@
 package main
 
 import (
+	"crypto/tls"
 	"database/sql"
 	"flag"
+	"fmt"
 	"html/template"
 	"kibonga/quickbits/internal/models"
 	"log"
@@ -30,7 +32,7 @@ type app struct {
 type cliFlags struct {
 	dsn      string
 	addr     string
-	htmlPath string
+	rootPath string
 }
 
 func main() {
@@ -50,7 +52,7 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
-	tmplCache, err := createTemplateCache(cliFlags.htmlPath)
+	tmplCache, err := createTemplateCache(cliFlags.rootPath)
 	if err != nil {
 		errorLog.Fatal(err)
 	}
@@ -70,14 +72,24 @@ func main() {
 		sessionManager: sessionManager,
 	}
 
+	tlsConfig := &tls.Config{
+		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+	}
+
 	srv := &http.Server{
-		Addr:     cliFlags.addr,
-		ErrorLog: errorLog,
-		Handler:  app.routes(),
+		Addr:         cliFlags.addr,
+		ErrorLog:     errorLog,
+		Handler:      app.routes(),
+		TLSConfig:    tlsConfig,
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 
 	infoLog.Printf("Starting server on %s", srv.Addr)
-	err = srv.ListenAndServe()
+	certPath := fmt.Sprintf("%s%s", app.cliFlags.rootPath, "tls/cert.pem")
+	pkPath := fmt.Sprintf("%s%s", app.cliFlags.rootPath, "tls/key.pem")
+	err = srv.ListenAndServeTLS(certPath, pkPath)
 	errorLog.Fatal(err)
 }
 
@@ -91,7 +103,7 @@ func parseCLIFlags() *cliFlags {
 	return &cliFlags{
 		addr:     *addr,
 		dsn:      *dsn,
-		htmlPath: *htmlPath,
+		rootPath: *htmlPath,
 	}
 }
 
