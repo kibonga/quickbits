@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/go-playground/form/v4"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -69,7 +68,7 @@ func (a *app) bitsView(w http.ResponseWriter, r *http.Request) {
 	a.render(w, http.StatusOK, "view.tmpl", data)
 }
 
-func (a *app) bitsCreate(w http.ResponseWriter, r *http.Request) {
+func (a *app) bitsCreatePost(w http.ResponseWriter, r *http.Request) {
 	// bit := &models.InsertBit{}
 	// if err := json.NewDecoder(r.Body).Decode(&bit); err != nil {
 	// 	fmt.Println(err)
@@ -115,7 +114,7 @@ func (a *app) bitsCreate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/bits/view/%d", id), http.StatusSeeOther)
 }
 
-func (a *app) bitsCreateForm(w http.ResponseWriter, r *http.Request) {
+func (a *app) bitsCreate(w http.ResponseWriter, r *http.Request) {
 	// w.Write([]byte("Display bit form for creating new bit"))
 	data := a.newTemplateData(r)
 	data.Form = &bitCreateForm{
@@ -159,20 +158,21 @@ func (a *app) bitsUpdate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/bits/view/%d", id), http.StatusSeeOther)
 }
 
-func (a *app) decodePostForm(r *http.Request, dst any) error {
-	if err := r.ParseForm(); err != nil {
-		return err
-	}
+func (a *app) userSignup(w http.ResponseWriter, r *http.Request) {
+}
 
-	if err := a.formDecoder.Decode(dst, r.PostForm); err != nil {
-		var invalidDecoderError *form.InvalidDecoderError
+func (a *app) userSignupPost(w http.ResponseWriter, r *http.Request) {
 
-		if errors.As(err, &invalidDecoderError) {
-			panic(err)
-		}
+}
 
-		return err
-	}
+func (a *app) userLogin(w http.ResponseWriter, r *http.Request) {
 
-	return nil
+}
+
+func (a *app) userLoginPost(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (a *app) userLogoutPost(w http.ResponseWriter, r *http.Request) {
+
 }
