@@ -14,15 +14,20 @@
         </header>
         <nav>
             <div>
-            <a href='/'>Home</a>
-            <a href="/bits/create">Create Bit</a>
+                <a href='/'>Home</a>
+                {{if .IsUserAuthenticated}}
+                <a href="/bits/create">Create Bit</a>
+                {{end}}
             </div>
             <div>
-                <a href="/user/signup">Signup</a>
-                <a href="/user/login">Login</a>
+                {{if .IsUserAuthenticated}}
                 <form action="/user/logout" method="POST">
                     <button>Logout</button>
                 </form>
+                {{else }}
+                <a href="/user/signup">Signup</a>
+                <a href="/user/login">Login</a>
+                {{end}}
             </div>
         </nav>
         <section>

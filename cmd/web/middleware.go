@@ -59,3 +59,18 @@ func (a *app) recoverPanic(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+func (a *app) requireAuth(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !a.isUserAuthenticated(r.Context()) {
+			a.infoLog.Printf("unauthenticated access to=%s by host=%s", r.URL.RequestURI(), r.RemoteAddr)
+			a.sessionManager.Put(r.Context(), "flash", "You need to login first")
+			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+			return
+		}
+
+		w.Header().Add("Cache-Control", "no-store")
+
+		next.ServeHTTP(w, r)
+	})
+}
