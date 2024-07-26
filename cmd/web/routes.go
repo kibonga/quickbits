@@ -18,7 +18,7 @@ func (a *app) routes() http.Handler {
 	fileServer := http.FileServer(http.Dir("../../ui/static"))
 	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", fileServer))
 
-	dynamic := alice.New(a.sessionManager.LoadAndSave, noSurf)
+	dynamic := alice.New(a.sessionManager.LoadAndSave, noSurf, a.authenticate)
 
 	// Exercise purpose
 	// router.Handler(http.MethodGet, "/", dynamic.Then(http.HandlerFunc(a.bitsIndex)))
