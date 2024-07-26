@@ -22,6 +22,7 @@ type app struct {
 	errorLog       *log.Logger
 	infoLog        *log.Logger
 	bitModel       *models.BitModel
+	userModel      *models.UserModel
 	cliFlags       *cliFlags
 	db             *sql.DB
 	templateCache  map[string]*template.Template
@@ -52,6 +53,11 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
+	userModel, err := models.CreateUserModel(db)
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+
 	tmplCache, err := createTemplateCache(cliFlags.rootPath)
 	if err != nil {
 		errorLog.Fatal(err)
@@ -65,6 +71,7 @@ func main() {
 		errorLog:       errorLog,
 		infoLog:        infoLog,
 		bitModel:       bitModel,
+		userModel:      userModel,
 		cliFlags:       cliFlags,
 		db:             db,
 		templateCache:  tmplCache,
@@ -82,8 +89,8 @@ func main() {
 		Handler:      app.routes(),
 		TLSConfig:    tlsConfig,
 		IdleTimeout:  time.Minute,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  5000 * time.Second,
+		WriteTimeout: 1000 * time.Second,
 	}
 
 	infoLog.Printf("Starting server on %s", srv.Addr)
