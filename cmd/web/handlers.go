@@ -101,7 +101,7 @@ func (a *app) bitsCreatePost(w http.ResponseWriter, r *http.Request) {
 	form.CheckField(validator.MaxChars(form.Title, 100), "title", "Title must be less than 100 characters")
 	form.CheckField(validator.NotBlank(form.Content), "content", "Content is required")
 	form.CheckField(validator.MaxChars(form.Content, 1000), "content", "Content must be less than 1000 characters")
-	form.CheckField(validator.PermittedInt(form.ExpiresAt, 1, 7, 365), "expires", "Expires must be either 1, 7 or 365 days")
+	form.CheckField(validator.PermittedValue(form.ExpiresAt, 1, 7, 365), "expires", "Expires must be either 1, 7 or 365 days")
 
 	if !form.Valid() {
 		data := a.newTemplateData(r)
