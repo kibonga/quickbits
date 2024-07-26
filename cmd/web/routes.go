@@ -3,6 +3,8 @@ package main
 import (
 	"net/http"
 
+	"kibonga/quickbits/ui"
+
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
 )
@@ -15,8 +17,10 @@ func (a *app) routes() http.Handler {
 	})
 
 	// router.HandlerFunc(http.MethodGet, "/static/", http.StripPrefix("/static", fileServer).(http.HandlerFunc))
-	fileServer := http.FileServer(http.Dir("../../ui/static"))
-	router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", fileServer))
+	// fileServer := http.FileServer(http.Dir("../../ui/static"))
+	fileServer := http.FileServer(http.FS(ui.Files))
+	// router.Handler(http.MethodGet, "/static/*filepath", http.StripPrefix("/static", fileServer))
+	router.Handler(http.MethodGet, "/static/*filepath", fileServer)
 
 	dynamic := alice.New(a.sessionManager.LoadAndSave, noSurf, a.authenticate)
 
