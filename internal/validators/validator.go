@@ -64,3 +64,12 @@ func PermittedInt(value int, permittedValues ...int) bool {
 	}
 	return false
 }
+
+func PermittedValue[T comparable](v T, s ...T) bool {
+	for i := range s {
+		if v == s[i] {
+			return true
+		}
+	}
+	return false
+}
