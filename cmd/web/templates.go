@@ -10,11 +10,12 @@ import (
 )
 
 type templateData struct {
-	Bit           *models.Bit
-	Bits          []*models.Bit
-	CopyrightYear int
-	Form          any
-	Flash         string
+	Bit                 *models.Bit
+	Bits                []*models.Bit
+	CopyrightYear       int
+	Form                any
+	Flash               string
+	IsUserAuthenticated bool
 }
 
 func createTemplateCache(htmlPath string) (map[string]*template.Template, error) {
@@ -53,8 +54,9 @@ func createTemplateCache(htmlPath string) (map[string]*template.Template, error)
 
 func (a *app) newTemplateData(r *http.Request) *templateData {
 	return &templateData{
-		CopyrightYear: time.Now().Year(),
-		Flash:         a.sessionManager.PopString(r.Context(), "flash"),
+		CopyrightYear:       time.Now().Year(),
+		Flash:               a.sessionManager.PopString(r.Context(), "flash"),
+		IsUserAuthenticated: a.isUserAuthenticated(r.Context()),
 	}
 }
 
