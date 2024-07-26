@@ -22,7 +22,7 @@ type app struct {
 	errorLog       *log.Logger
 	infoLog        *log.Logger
 	bitModel       *models.BitModel
-	userModel      *models.UserModel
+	userModel      *models.UserModelDB
 	cliFlags       *cliFlags
 	db             *sql.DB
 	templateCache  map[string]*template.Template
@@ -53,7 +53,7 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
-	userModel, err := models.CreateUserModel(db)
+	userModel, err := models.UserModelDb(db)
 	if err != nil {
 		errorLog.Fatal(err)
 	}

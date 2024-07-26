@@ -59,7 +59,7 @@ func (a *app) newTemplateData(r *http.Request) *templateData {
 	return &templateData{
 		CopyrightYear:       time.Now().Year(),
 		Flash:               a.sessionManager.PopString(r.Context(), "flash"),
-		IsUserAuthenticated: a.isUserAuthenticated(r.Context()),
+		IsUserAuthenticated: a.isUserAuthenticated(r),
 		CSRFToken:           nosurf.Token(r),
 	}
 }

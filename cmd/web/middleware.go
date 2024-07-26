@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -64,7 +65,7 @@ func (a *app) recoverPanic(next http.Handler) http.Handler {
 
 func (a *app) requireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !a.isUserAuthenticated(r.Context()) {
+		if !a.isUserAuthenticated(r) {
 			a.infoLog.Printf("unauthenticated access to=%s by host=%s", r.URL.RequestURI(), r.RemoteAddr)
 			a.sessionManager.Put(r.Context(), "flash", "You need to login first")
 			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
@@ -87,4 +88,27 @@ func noSurf(next http.Handler) http.Handler {
 	})
 
 	return csrfHandler
+}
+
+func (a *app) authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id := a.sessionManager.GetInt(r.Context(), "authUserId")
+		if id == 0 {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		exists, err := a.userModel.Exists(id)
+		if err != nil {
+			a.serverError(w, err)
+			return
+		}
+
+		if exists {
+			ctx := context.WithValue(r.Context(), isAuthenticatedContextKey, true)
+			r = r.WithContext(ctx)
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

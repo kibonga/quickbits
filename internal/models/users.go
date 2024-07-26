@@ -19,7 +19,7 @@ type User struct {
 	Created        time.Time
 }
 
-type UserModel struct {
+type UserModelDB struct {
 	DB         *sql.DB
 	InsertStmt *sql.Stmt
 	AuthStmt   *sql.Stmt
@@ -37,7 +37,7 @@ type UserLoginModel struct {
 	Pasword string
 }
 
-func (m *UserModel) Insert(u *UserSignupModel) (int, error) {
+func (m *UserModelDB) Insert(u *UserSignupModel) (int, error) {
 	tx, err := m.DB.Begin()
 	defer tx.Rollback()
 
@@ -73,7 +73,7 @@ func (m *UserModel) Insert(u *UserSignupModel) (int, error) {
 	return int(id), nil
 }
 
-func (m *UserModel) Auth(u *UserLoginModel) (int, error) {
+func (m *UserModelDB) Auth(u *UserLoginModel) (int, error) {
 	tx, err := m.DB.Begin()
 	if err != nil {
 		return 0, err
@@ -101,8 +101,24 @@ func (m *UserModel) Auth(u *UserLoginModel) (int, error) {
 	return id, nil
 }
 
-func (m *UserModel) Exists(id int) (bool, error) {
-	return false, nil
+func (m *UserModelDB) Exists(id int) (bool, error) {
+	tx, err := m.DB.Begin()
+	if err != nil {
+		return false, nil
+	}
+	defer tx.Rollback()
+
+	var exists bool
+
+	if err := m.ExistsStmt.QueryRow(id).Scan(&exists); err != nil {
+		return false, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return false, nil
+	}
+
+	return exists, nil
 }
 
 func userInsertStmt(db *sql.DB) (*sql.Stmt, error) {
@@ -118,7 +134,7 @@ func userInsertStmt(db *sql.DB) (*sql.Stmt, error) {
 }
 
 func userExistsStmt(db *sql.DB) (*sql.Stmt, error) {
-	query := "select count(id) from users where id = ?"
+	query := "select exists(select 1 from users where id = ?)"
 
 	stmt, err := db.Prepare(query)
 	if err != nil {
@@ -139,7 +155,7 @@ func userAuthStmt(db *sql.DB) (*sql.Stmt, error) {
 	return stmt, nil
 }
 
-func CreateUserModel(db *sql.DB) (*UserModel, error) {
+func UserModelDb(db *sql.DB) (*UserModelDB, error) {
 
 	userInsertStmt, err := userInsertStmt(db)
 	if err != nil {
@@ -156,7 +172,7 @@ func CreateUserModel(db *sql.DB) (*UserModel, error) {
 		return nil, err
 	}
 
-	return &UserModel{
+	return &UserModelDB{
 		DB:         db,
 		InsertStmt: userInsertStmt,
 		ExistsStmt: userExistsStmt,

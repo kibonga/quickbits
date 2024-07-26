@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -69,6 +68,10 @@ func (a *app) decodePostForm(r *http.Request, dst any) error {
 	return nil
 }
 
-func (a *app) isUserAuthenticated(ctx context.Context) bool {
-	return a.sessionManager.Exists(ctx, "authUserId")
+func (a *app) isUserAuthenticated(r *http.Request) bool {
+	isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
+	if !ok {
+		return false
+	}
+	return isAuthenticated
 }
