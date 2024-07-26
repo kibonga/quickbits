@@ -1,12 +1,16 @@
 package validator
 
 import (
+	"regexp"
 	"strings"
 	"unicode/utf8"
 )
 
+var emailRegexp *regexp.Regexp = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+
 type Validator struct {
-	FieldErrors map[string]string
+	GeneralErrors []string
+	FieldErrors   map[string]string
 }
 
 func (v *Validator) Valid() bool {
@@ -23,6 +27,13 @@ func (v *Validator) AddFieldError(key, message string) {
 	}
 }
 
+func (v *Validator) AddGeneralError(message string) {
+	if v.GeneralErrors == nil {
+		v.GeneralErrors = []string{}
+	}
+	v.GeneralErrors = append(v.GeneralErrors, message)
+}
+
 func (v *Validator) CheckField(ok bool, key, message string) {
 	if !ok {
 		v.AddFieldError(key, message)
@@ -35,6 +46,14 @@ func NotBlank(value string) bool {
 
 func MaxChars(value string, n int) bool {
 	return utf8.RuneCountInString(value) <= n
+}
+
+func MinChars(input string, n int) bool {
+	return utf8.RuneCountInString(input) >= n
+}
+
+func ValidEmail(email string) bool {
+	return emailRegexp.MatchString(email)
 }
 
 func PermittedInt(value int, permittedValues ...int) bool {
