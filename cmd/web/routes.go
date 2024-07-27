@@ -30,6 +30,10 @@ func (a *app) routes() http.Handler {
 	// router.HandlerFunc(http.MethodGet, "/bits/create", dynamic.Then(http.HandlerFunc(a.bitCreateForm)).ServeHTTP)
 	// router.Handler(http.MethodPost, "/bits/create", dynamic.ThenFunc(a.bitCreate))
 
+	router.HandlerFunc(http.MethodGet, "/ping", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("PING"))
+	})
+
 	router.Handler(http.MethodGet, "/", dynamic.ThenFunc(a.bitsIndex))
 	router.Handler(http.MethodGet, "/bits/view/:id", dynamic.ThenFunc(a.bitsView))
 	router.Handler(http.MethodGet, "/user/signup", dynamic.ThenFunc(a.userSignup))
